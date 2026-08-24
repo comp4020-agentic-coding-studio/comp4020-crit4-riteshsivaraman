@@ -70,6 +70,17 @@ export const HOLD_MAX_CLUSTER = 12;
 /** Stagger between the notes of a released cluster — a fast arpeggio reads
  *  as a chord but stays under the voice cap far better than a true stack. */
 export const RELEASE_ARPEGGIO_MS = 38;
+/** Level and decay of the sustained voice while charging a hold. Not in
+ *  plan.md — added while building Issue 4 because the held voice needs a
+ *  full NoteSpec and there is no genome to read one from until release.
+ *  Not yet tuned by ear; revisit at the sound bench. */
+export const HOLD_NOTE_LEVEL = 0.8;
+export const HOLD_NOTE_DECAY = 0.6;
+/** Speed and angular spread given to a released cluster as it disperses
+ *  along the drag vector. Same status as the two constants above: added
+ *  for Issue 4, not bench-tuned. */
+export const DISPERSAL_SPEED = 260; // px/s
+export const DISPERSAL_SPREAD_RAD = Math.PI / 5;
 
 // ─── render ──────────────────────────────────────────────────────────────
 export const MAX_DPR = 2;
