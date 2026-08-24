@@ -1,0 +1,54 @@
+/*
+ * Culture — design tokens. plan.md §2 is the spec; this file is the only
+ * place a colour or a type size is written down. If you need a value that
+ * is not here, add it here rather than inlining it.
+ *
+ * The palette is three real Risograph spot inks on uncoated stock. They
+ * are not decorative: pink carries pitch, blue carries size, yellow
+ * carries brightness, and where they overlap they multiply — so a child
+ * printed between two parents is literally their two colours mixed.
+ */
+:root {
+  /* ink */
+  --paper: #efeae0;
+  --paper-shadow: #dcd5c7;
+  --ink-pink: #ff48b0; /* Fluorescent Pink  — pitch height   */
+  --ink-blue: #0078bf; /* Medium Blue       — size / mass    */
+  --ink-yellow: #ffe800; /* Yellow            — brightness     */
+  --ink-text: #2b2a28;
+
+  /* type */
+  --face-display: "Anton", "Haettenschweiler", "Arial Narrow", sans-serif;
+  --face-utility: "Space Mono", ui-monospace, "SFMono-Regular", "Menlo", monospace;
+
+  --size-wordmark: 1.75rem;
+  --size-invite: 0.9375rem;
+  --size-label: 0.6875rem;
+  --size-value: 0.8125rem;
+
+  --track-wordmark: -0.02em;
+  --track-label: 0.14em;
+
+  /* space — a 4px base, because the label is a printed object and
+     printed objects have tight, even margins */
+  --s1: 0.25rem;
+  --s2: 0.5rem;
+  --s3: 0.75rem;
+  --s4: 1rem;
+  --s6: 1.5rem;
+  --s8: 2rem;
+
+  /* motion */
+  --register-duration: 520ms;
+  --register-stagger: 90ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* The simulation is the product, so it keeps running. What stops is the
+   page's own choreography: the load registration and any transition. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --register-duration: 0ms;
+    --register-stagger: 0ms;
+  }
+}

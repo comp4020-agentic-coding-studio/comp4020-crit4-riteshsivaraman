@@ -1,0 +1,714 @@
+<meta charset="utf-8">
+<title>Culture Design Bench</title>
+<style>
+  :root {
+    --paper: #EFEAE0;
+    --ink-pink: #FF48B0;
+    --ink-blue: #0078BF;
+    --ink-yellow: #FFE800;
+    --ink-text: #2B2A28;
+    --paper-shadow: #DCD5C7;
+    --rule: #C9C1B0;
+    --quiet: #6E675C;
+    --quieter: #8A8175;
+
+    --display: Anton, Haettenschweiler, "Arial Narrow Bold", Impact, sans-serif;
+    --mono: "Space Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+
+  /* Single theme on purpose: this is a printed plate, and there is no dark
+     stock. Every colour is painted explicitly so the page holds up on
+     whatever ground the viewer's host paints behind it. */
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink-text);
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .sheet {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 40px 24px 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  /* ---- masthead ---------------------------------------------------- */
+
+  .masthead { display: flex; flex-direction: column; gap: 4px; }
+
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--quiet);
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-size: clamp(52px, 13vw, 108px);
+    line-height: 0.86;
+    letter-spacing: -0.02em;
+    margin: 0;
+    text-transform: uppercase;
+    /* Printed in three passes. The base pass is YELLOW, not near-black:
+       multiply over near-black returns near-black and the slip vanishes.
+       Yellow x pink x blue lands near-black where the passes register and
+       shows ink at the edges where they do not. */
+    color: var(--ink-yellow);
+    position: relative;
+    isolation: isolate;
+  }
+  h1 .slip {
+    position: absolute;
+    inset: 0;
+    mix-blend-mode: multiply;
+    pointer-events: none;
+  }
+  h1 .slip.a { color: var(--ink-pink); transform: translate(2.4px, -0.8px); }
+  h1 .slip.b { color: var(--ink-blue); transform: translate(-1.8px, 1.6px); }
+
+  .tagline { font-size: 15px; color: #57514A; }
+
+  /* ---- printed cards ----------------------------------------------- */
+
+  section {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    box-shadow: 2px 2px 0 var(--paper-shadow);
+    padding: 22px 24px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  h2 {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: baseline;
+  }
+  h2 .ref { font-weight: 400; color: var(--quieter); letter-spacing: 0.06em; }
+
+  p { margin: 0; max-width: 66ch; }
+  .note { color: var(--quiet); }
+  strong { font-weight: 700; }
+
+  code {
+    font-family: var(--mono);
+    background: #E3DCCE;
+    padding: 0 4px;
+  }
+
+  /* ---- ink swatches ------------------------------------------------ */
+
+  .inks { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .chip { display: flex; flex-direction: column; gap: 4px; }
+  .chip .block { height: 76px; border: 1px solid var(--rule); }
+  .chip .name { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
+  .chip .hex { font-size: 12px; color: var(--quiet); font-variant-numeric: tabular-nums; }
+
+  .overprint { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px; }
+  .mix { border: 1px solid var(--rule); }
+  .mix .stack { height: 84px; position: relative; background: var(--paper); isolation: isolate; }
+  .mix .stack i { position: absolute; inset: 0; mix-blend-mode: multiply; }
+  .mix .caption { padding: 6px 8px; font-size: 11px; border-top: 1px solid var(--rule); }
+
+  /* ---- controls ---------------------------------------------------- */
+
+  .rows { display: flex; flex-direction: column; gap: 10px; }
+  .row {
+    display: grid;
+    grid-template-columns: 96px 1fr 62px;
+    align-items: center;
+    gap: 14px;
+  }
+  .row > label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .row output {
+    font-size: 13px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: #57514A;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 18px;
+    background: transparent;
+    margin: 0;
+  }
+  input[type="range"]::-webkit-slider-runnable-track { height: 2px; background: var(--ink-text); }
+  input[type="range"]::-moz-range-track { height: 2px; background: var(--ink-text); }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px; height: 18px;
+    background: var(--ink-pink);
+    border: 1px solid var(--ink-text);
+    margin-top: -8px;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 12px; height: 18px;
+    background: var(--ink-pink);
+    border: 1px solid var(--ink-text);
+    border-radius: 0;
+  }
+
+  .segmented { display: flex; }
+  .segmented button {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 6px 16px;
+    background: var(--paper);
+    color: var(--ink-text);
+    border: 1px solid var(--ink-text);
+    border-right-width: 0;
+    cursor: pointer;
+  }
+  .segmented button:last-child { border-right-width: 1px; }
+  .segmented button[aria-pressed="true"] { background: var(--ink-pink); }
+
+  :focus-visible { outline: 2px solid var(--ink-blue); outline-offset: 2px; }
+
+  .keys { display: flex; flex-wrap: wrap; gap: 6px; }
+  .keys button {
+    font-family: var(--mono);
+    width: 48px; height: 56px;
+    background: var(--paper);
+    border: 1px solid var(--ink-text);
+    box-shadow: 2px 2px 0 var(--paper-shadow);
+    cursor: pointer;
+    font-size: 12px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px;
+  }
+  .keys button:active { box-shadow: none; transform: translate(2px, 2px); }
+  .keys button .deg { font-size: 10px; color: var(--quieter); }
+
+  .act {
+    font-family: var(--mono);
+    align-self: flex-start;
+    background: var(--ink-text);
+    color: var(--paper);
+    border: 1px solid var(--ink-text);
+    padding: 8px 16px;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 2px 2px 0 var(--paper-shadow);
+  }
+  .act:active { box-shadow: none; transform: translate(2px, 2px); }
+
+  .status { font-size: 12px; color: var(--quiet); min-height: 1.65em; }
+
+  /* Height comes from CSS, not the width/height attributes: with
+     width:100% those attributes only set an intrinsic ratio, which
+     stretches the element and leaves the drawing at the wrong scale. */
+  canvas { display: block; width: 100%; border: 1px solid var(--rule); background: var(--paper); }
+  #cell { height: 220px; }
+  #press { height: 260px; }
+
+  /* ---- tables ------------------------------------------------------ */
+
+  .scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 12px; min-width: 460px; }
+  th, td { text-align: left; padding: 7px 12px 7px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--quiet); font-weight: 400; }
+  td.num { font-variant-numeric: tabular-nums; }
+
+  .specimen { display: flex; flex-direction: column; gap: 14px; }
+  .spec-wordmark { font-family: var(--display); font-size: 28px; line-height: 0.9; letter-spacing: -0.02em; text-transform: uppercase; }
+  .spec-invite { font-family: var(--display); font-size: 15px; }
+  .spec-label { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; }
+  .spec-value { font-size: 13px; }
+  .spec-row { display: flex; gap: 16px; align-items: baseline; flex-wrap: wrap; }
+  .spec-row .what { font-size: 10px; color: var(--quieter); letter-spacing: 0.1em; text-transform: uppercase; }
+
+  footer { font-size: 12px; color: var(--quiet); max-width: 66ch; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+</style>
+
+<div class="sheet">
+
+  <header class="masthead">
+    <div class="eyebrow">COMP4020 crit 4 &middot; design bench &middot; plan.md &sect;2</div>
+    <h1>Culture<span class="slip a" aria-hidden="true">Culture</span><span class="slip b" aria-hidden="true">Culture</span></h1>
+    <p class="tagline">a plate that plays</p>
+  </header>
+
+  <section>
+    <h2>The direction <span class="ref">&sect;2.1</span></h2>
+    <p><strong>Risograph overprint.</strong> Three spot inks printed on warm paper in three passes that don't quite line up.</p>
+    <p class="note">Chosen over the obvious dark-canvas-with-glow because glow is where every generative audio toy lands, and because overprint does conceptual work no other direction does: where two inks overlap they genuinely mix, so <strong>colour mixing is genetic mixing</strong>. The metaphor isn't applied to the visuals &mdash; it is the same mechanism.</p>
+  </section>
+
+  <section>
+    <h2>Ink <span class="ref">&sect;2.2</span></h2>
+    <div class="inks" id="inks"></div>
+    <p class="note">Three inks multiply into six perceivable colours. A constrained palette that behaves like a rich one &mdash; the whole argument for the medium.</p>
+    <div class="overprint" id="overprint"></div>
+  </section>
+
+  <section>
+    <h2>Ink is derived, never stored <span class="ref">&sect;5.3 &middot; invariant I7</span></h2>
+    <p>Move a gene and the colour moves with it. Nothing stores a hue, so a child differs in ink by exactly as much as it differs in sound &mdash; that is what makes evolution <em>visible</em>.</p>
+    <div class="rows">
+      <div class="row">
+        <label for="g-degree">degree</label>
+        <input type="range" id="g-degree" min="0" max="14" step="1" value="7">
+        <output id="g-degree-o">7</output>
+      </div>
+      <div class="row">
+        <label for="g-size">size</label>
+        <input type="range" id="g-size" min="0.12" max="1" step="0.01" value="0.5">
+        <output id="g-size-o">0.50</output>
+      </div>
+      <div class="row">
+        <label for="g-bright">brightness</label>
+        <input type="range" id="g-bright" min="0" max="1" step="0.01" value="0.6">
+        <output id="g-bright-o">0.60</output>
+      </div>
+    </div>
+    <canvas id="cell" aria-label="A single cell drawn from the genome above, in three overprinted inks"></canvas>
+    <p class="status" id="ink-readout"></p>
+  </section>
+
+  <section>
+    <h2>The signature: the press slips <span class="ref">&sect;2.5</span></h2>
+    <p>The layers sit at a fixed registration offset. <strong>On a collision the offset jolts</strong> &mdash; proportional to energy, settling over <code>JOLT_DECAY_MS</code>. A loud note <em>looks</em> like the press slipping.</p>
+    <canvas id="press" aria-label="Three overprinted ink discs; press the button to jolt the registration"></canvas>
+    <div class="rows">
+      <div class="row">
+        <label for="energy">energy</label>
+        <input type="range" id="energy" min="0" max="1" step="0.01" value="0.7">
+        <output id="energy-o">0.70</output>
+      </div>
+    </div>
+    <button class="act" id="jolt">Slip the press</button>
+    <p class="note">Base offsets in CSS pixels &mdash; pink <code>(+1.2, &minus;0.4)</code>, blue <code>(&minus;0.9, +0.8)</code>, yellow <code>(+0.3, +1.1)</code>; a jolt scales them by <code>1 + energy &times; 3.5</code>.</p>
+  </section>
+
+  <section>
+    <h2>The sound bench <span class="ref">&sect;6 &middot; tune by ear, then edit constants.ts</span></h2>
+    <p>This runs the same voice as <code>src/lib/audio/voices.ts</code>: sine fundamental, triangle partial an octave up mixed by brightness, lowpass, ramped envelope, into the compressor &rarr; limiter master chain. <strong>Numbers you settle here transfer straight into <code>constants.ts</code>.</strong></p>
+
+    <div class="segmented" role="group" aria-label="Mood" id="moods"></div>
+
+    <div class="rows">
+      <div class="row">
+        <label for="a-bright">brightness</label>
+        <input type="range" id="a-bright" min="0" max="1" step="0.01" value="0.6">
+        <output id="a-bright-o">0.60</output>
+      </div>
+      <div class="row">
+        <label for="a-decay">decay</label>
+        <input type="range" id="a-decay" min="0" max="1" step="0.01" value="0.45">
+        <output id="a-decay-o">0.45</output>
+      </div>
+      <div class="row">
+        <label for="a-level">level</label>
+        <input type="range" id="a-level" min="0" max="1" step="0.01" value="0.7">
+        <output id="a-level-o">0.70</output>
+      </div>
+      <div class="row">
+        <label for="a-pan">pan</label>
+        <input type="range" id="a-pan" min="-1" max="1" step="0.01" value="0">
+        <output id="a-pan-o">0.00</output>
+      </div>
+    </div>
+
+    <div class="keys" id="keys"></div>
+    <button class="act" id="cascade">Play a cascade</button>
+    <p class="status" id="audio-status">Sound starts on your first press &mdash; the context stays suspended until then, same as the instrument.</p>
+    <p class="note">Every degree lands on a scale tone by construction: pitch travels as an integer index, and only <code>audio/scales.ts</code> may compute a frequency. There is no way to play a wrong note because a wrong note is not representable.</p>
+  </section>
+
+  <section>
+    <h2>Type <span class="ref">&sect;2.3</span></h2>
+    <p class="note">Display <strong>Anton</strong>, utility <strong>Space Mono</strong>. The page is ~95% canvas, so the type budget is about eight words &mdash; an argument for making those eight characterful, not for having no opinion. This bench substitutes the nearest installed condensed face; the built site loads the real ones.</p>
+    <div class="specimen">
+      <div class="spec-row"><span class="spec-wordmark">Culture</span><span class="what">wordmark &middot; 28 / 0.9 / &minus;0.02em</span></div>
+      <div class="spec-row"><span class="spec-invite">tap anywhere</span><span class="what">invite &middot; 15</span></div>
+      <div class="spec-row"><span class="spec-label">Mood</span><span class="what">label &middot; 11 / 0.14em / upper</span></div>
+      <div class="spec-row"><span class="spec-value">bright</span><span class="what">value &middot; 13</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Copy <span class="ref">&sect;2.8</span></h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Element</th><th>Copy</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>Wordmark</td><td>CULTURE</td><td>the single h1</td></tr>
+          <tr><td>Tagline</td><td>a plate that plays</td><td>names the object and the verb</td></tr>
+          <tr><td>Invite</td><td>tap anywhere / higher is higher</td><td>the entire instruction manual, and the gesture that unlocks audio</td></tr>
+          <tr><td>Mood</td><td>bright / deep / open</td><td>feelings, not <code>C major pentatonic</code> &mdash; nobody needs theory to pick one</td></tr>
+          <tr><td>Drift</td><td>DRIFT</td><td>mutation strength; one knob for the whole evolution system</td></tr>
+          <tr><td>Level</td><td>LEVEL</td><td>master gain</td></tr>
+          <tr><td>Clear</td><td>clear</td><td>not "reset" &mdash; there is no state to fail back from</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Motion <span class="ref">&sect;2.6 &middot; &sect;2.7</span></h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Moment</th><th>Behaviour</th><th class="num">Timing</th></tr></thead>
+        <tbody>
+          <tr><td>Page load</td><td>the three layers slide into register from ~14px out; the page prints itself</td><td class="num">520ms ease-out, 90ms stagger</td></tr>
+          <tr><td>Collision</td><td>registration jolts by <code>1 + energy &times; 3.5</code>, then settles</td><td class="num">140ms decay</td></tr>
+          <tr><td>Ambient</td><td>cells pulse at a rate tied to <code>speed</code> &mdash; the simulation, not decoration</td><td class="num">continuous</td></tr>
+          <tr><td>Grain</td><td>one 128&times;128 tile generated once, tiled, multiply. Static &mdash; regenerating per frame is video noise, not paper</td><td class="num">alpha 0.05</td></tr>
+          <tr><td>Reduced motion</td><td>skips the load registration and freezes the grain; <strong>the simulation keeps running</strong> &mdash; it is the instrument</td><td class="num">&mdash;</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    Every value on this page is read from <code>plan.md</code> &sect;2 and <code>src/lib/constants.ts</code>. If the two disagree, the constants win and the plan is stale.
+  </footer>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  // ---- values mirrored from src/lib/constants.ts --------------------
+  const INK = { pink: "#FF48B0", blue: "#0078BF", yellow: "#FFE800" };
+  const INK_ORDER = ["yellow", "pink", "blue"];
+  const REGISTRATION = { pink: [1.2, -0.4], blue: [-0.9, 0.8], yellow: [0.3, 1.1] };
+  const JOLT_SCALE = 3.5, JOLT_DECAY_MS = 140;
+  const CELL_ALPHA = 0.62;
+  const RADIUS_RANGE = [6, 26];
+  const SCALE_SPAN = 15;
+  const ATTACK_RANGE = [0.004, 0.02], RELEASE_RANGE = [0.35, 2.4];
+  const CUTOFF_RANGE = [420, 4200], PARTIAL_GAIN = 0.34, MASTER_GAIN = 0.55;
+  const MOODS = {
+    bright: { root: 60, steps: [0, 2, 4, 7, 9] },
+    deep:   { root: 45, steps: [0, 3, 5, 7, 10] },
+    open:   { root: 50, steps: [0, 2, 5, 7, 9] },
+  };
+
+  // Declared up here because drawCell() reads it during slider init,
+  // which runs before the audio section below.
+  let currentMood = "bright";
+
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
+  const fmt = (v, d = 2) => v.toFixed(d);
+
+  // ---- scales.ts ----------------------------------------------------
+  function midiOf(degree, mood) {
+    const { root, steps } = MOODS[mood];
+    const d = Math.max(0, Math.min(SCALE_SPAN - 1, Math.round(degree)));
+    const octave = Math.floor(d / steps.length);
+    return root + octave * 12 + steps[d % steps.length];
+  }
+  const freq = (degree, mood) => 440 * Math.pow(2, (midiOf(degree, mood) - 69) / 12);
+
+  // ---- ink.ts -------------------------------------------------------
+  const inkOf = (g) => ({
+    pink: clamp01(g.degree / (SCALE_SPAN - 1)),
+    blue: clamp01(g.size),
+    yellow: clamp01(g.brightness),
+  });
+
+  // ---- swatches -----------------------------------------------------
+  const SWATCHES = [
+    ["paper", "#EFEAE0", "ground, warm uncoated stock"],
+    ["ink-pink", "#FF48B0", "Fluorescent Pink, pitch height"],
+    ["ink-blue", "#0078BF", "Medium Blue, size and mass"],
+    ["ink-yellow", "#FFE800", "Yellow, brightness and timbre"],
+    ["ink-text", "#2B2A28", "warm near-black, type only"],
+    ["paper-shadow", "#DCD5C7", "the label's drop, rules, disabled"],
+  ];
+  document.getElementById("inks").innerHTML = SWATCHES.map(
+    ([name, hex, role]) => `<div class="chip">
+      <div class="block" style="background:${hex}"></div>
+      <div class="name">${name}</div>
+      <div class="hex">${hex}</div>
+      <div class="hex">${role}</div>
+    </div>`,
+  ).join("");
+
+  const MIXES = [
+    ["pink", ["#FF48B0"]],
+    ["blue", ["#0078BF"]],
+    ["yellow", ["#FFE800"]],
+    ["pink × blue", ["#FF48B0", "#0078BF"]],
+    ["pink × yellow", ["#FF48B0", "#FFE800"]],
+    ["blue × yellow", ["#0078BF", "#FFE800"]],
+    ["all three", ["#FF48B0", "#0078BF", "#FFE800"]],
+  ];
+  document.getElementById("overprint").innerHTML = MIXES.map(
+    ([label, layers]) => `<div class="mix">
+      <div class="stack">${layers.map((c) => `<i style="background:${c}"></i>`).join("")}</div>
+      <div class="caption">${label}</div>
+    </div>`,
+  ).join("");
+
+  // ---- shared canvas helper -----------------------------------------
+  function fit(canvas) {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if (!w || !h) return null;
+    const bw = Math.round(w * dpr), bh = Math.round(h * dpr);
+    // Only resize when it actually changed: assigning width clears the
+    // canvas, and doing that every frame would throw away work for free.
+    if (canvas.width !== bw || canvas.height !== bh) {
+      canvas.width = bw;
+      canvas.height = bh;
+    }
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { ctx, w, h };
+  }
+
+  function disc(ctx, x, y, r, colour, alpha) {
+    ctx.globalCompositeOperation = "multiply";
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = colour;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = "source-over";
+  }
+
+  // ---- derived-ink demo ---------------------------------------------
+  const cell = document.getElementById("cell");
+  const readout = document.getElementById("ink-readout");
+  const gene = { degree: 7, size: 0.5, brightness: 0.6 };
+
+  function drawCell() {
+    const box = fit(cell);
+    if (!box) return;
+    const { ctx, w, h } = box;
+    ctx.fillStyle = "#EFEAE0";
+    ctx.fillRect(0, 0, w, h);
+    const weights = inkOf(gene);
+    const r = lerp(RADIUS_RANGE[0], RADIUS_RANGE[1], gene.size) * 3;
+    for (const channel of INK_ORDER) {
+      const [ox, oy] = REGISTRATION[channel];
+      const cx = w / 2 + ox * 3, cy = h / 2 + oy * 3;
+      disc(ctx, cx, cy, r, INK[channel], weights[channel] * CELL_ALPHA);
+      disc(ctx, cx, cy, r * 0.45, INK[channel], weights[channel] * CELL_ALPHA * 0.5);
+    }
+    readout.textContent =
+      `inkOf → pink ${fmt(weights.pink)} · blue ${fmt(weights.blue)}` +
+      ` · yellow ${fmt(weights.yellow)}` +
+      `   —   sounds at ${freq(gene.degree, currentMood).toFixed(1)} Hz in ${currentMood}`;
+  }
+
+  function bindRange(id, onChange, digits) {
+    const input = document.getElementById(id);
+    const out = document.getElementById(id + "-o");
+    const sync = () => {
+      const v = Number(input.value);
+      out.textContent = digits === 0 ? String(v) : fmt(v, digits ?? 2);
+      onChange(v);
+    };
+    input.addEventListener("input", sync);
+    sync();
+  }
+
+  bindRange("g-degree", (v) => { gene.degree = v; drawCell(); }, 0);
+  bindRange("g-size", (v) => { gene.size = v; drawCell(); });
+  bindRange("g-bright", (v) => { gene.brightness = v; drawCell(); });
+
+  // ---- the press -----------------------------------------------------
+  const press = document.getElementById("press");
+  let joltAt = -Infinity, joltEnergy = 0;
+
+  function drawPress(now) {
+    const box = fit(press);
+    if (!box) { requestAnimationFrame(drawPress); return; }
+    const { ctx, w, h } = box;
+    ctx.fillStyle = "#EFEAE0";
+    ctx.fillRect(0, 0, w, h);
+
+    const elapsed = now - joltAt;
+    const decay = elapsed < JOLT_DECAY_MS ? 1 - elapsed / JOLT_DECAY_MS : 0;
+    const slip = 1 + joltEnergy * JOLT_SCALE * decay;
+
+    const r = Math.min(w, h) * 0.24;
+    const gap = r * 0.62;
+    const cx = w / 2, cy = h / 2;
+    const seats = { pink: [-gap, -gap * 0.4], blue: [gap, -gap * 0.4], yellow: [0, gap * 0.7] };
+
+    for (const channel of INK_ORDER) {
+      const [sx, sy] = seats[channel];
+      const [ox, oy] = REGISTRATION[channel];
+      disc(ctx, cx + sx + ox * slip * 4, cy + sy + oy * slip * 4, r, INK[channel], CELL_ALPHA);
+    }
+
+    ctx.fillStyle = "#6E675C";
+    ctx.font = '11px ui-monospace, Menlo, monospace';
+    ctx.fillText(`registration × ${slip.toFixed(2)}`, 12, h - 12);
+
+    requestAnimationFrame(drawPress);
+  }
+  requestAnimationFrame(drawPress);
+
+  bindRange("energy", () => {});
+  document.getElementById("jolt").addEventListener("click", () => {
+    joltEnergy = Number(document.getElementById("energy").value);
+    joltAt = performance.now();
+  });
+
+  // ---- the sound bench -------------------------------------------------
+  let ctxAudio = null, busNode = null;
+  const status = document.getElementById("audio-status");
+  const NEAR_ZERO = 0.0001;
+
+  function ensureAudio() {
+    if (ctxAudio) return ctxAudio;
+    ctxAudio = new (window.AudioContext || window.webkitAudioContext)();
+
+    const bus = ctxAudio.createGain();
+    bus.gain.value = 1;
+
+    const comp = ctxAudio.createDynamicsCompressor();
+    comp.threshold.value = -18; comp.knee.value = 12; comp.ratio.value = 6;
+    comp.attack.value = 0.003; comp.release.value = 0.18;
+
+    // Brick wall. Ratio 20 with a 1ms attack is a limiter in all but name.
+    const limiter = ctxAudio.createDynamicsCompressor();
+    limiter.threshold.value = -3; limiter.knee.value = 0; limiter.ratio.value = 20;
+    limiter.attack.value = 0.001; limiter.release.value = 0.05;
+
+    const master = ctxAudio.createGain();
+    master.gain.value = MASTER_GAIN;
+
+    bus.connect(comp).connect(limiter).connect(master).connect(ctxAudio.destination);
+    busNode = bus;
+    return ctxAudio;
+  }
+
+  function playNote(degree, at) {
+    const ac = ensureAudio();
+    if (ac.state === "suspended") ac.resume();
+    const t = at ?? ac.currentTime;
+
+    const brightness = clamp01(Number(document.getElementById("a-bright").value));
+    const decay = clamp01(Number(document.getElementById("a-decay").value));
+    const level = clamp01(Number(document.getElementById("a-level").value));
+    const pan = Number(document.getElementById("a-pan").value);
+    const hz = freq(degree, currentMood);
+
+    const osc = ac.createOscillator();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(hz, t);
+
+    const partial = ac.createOscillator();
+    partial.type = "triangle";
+    partial.frequency.setValueAtTime(hz * 2, t);
+
+    const partialGain = ac.createGain();
+    partialGain.gain.setValueAtTime(PARTIAL_GAIN * brightness, t);
+
+    const filter = ac.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(lerp(CUTOFF_RANGE[0], CUTOFF_RANGE[1], brightness), t);
+    filter.Q.setValueAtTime(0.7, t);
+
+    const env = ac.createGain();
+    env.gain.setValueAtTime(0, t);
+
+    const panner = ac.createStereoPanner();
+    panner.pan.setValueAtTime(Math.max(-1, Math.min(1, pan)), t);
+
+    osc.connect(filter);
+    partial.connect(partialGain).connect(filter);
+    filter.connect(env).connect(panner).connect(busNode);
+
+    // Brighter notes attack faster: a bright sound with a slow attack
+    // reads as a swell, not a pluck.
+    const attack = lerp(ATTACK_RANGE[1], ATTACK_RANGE[0], brightness);
+    env.gain.linearRampToValueAtTime(Math.max(NEAR_ZERO, level), t + attack);
+
+    const release = lerp(RELEASE_RANGE[0], RELEASE_RANGE[1], decay);
+    const end = t + attack + release;
+    env.gain.exponentialRampToValueAtTime(NEAR_ZERO, end);
+
+    osc.start(t); partial.start(t);
+    osc.stop(end + 0.02); partial.stop(end + 0.02);
+    osc.onended = () => {
+      for (const n of [osc, partial, partialGain, filter, env, panner]) n.disconnect();
+    };
+
+    status.textContent =
+      `degree ${degree} → MIDI ${midiOf(degree, currentMood)} → ${hz.toFixed(1)} Hz` +
+      `   ·   attack ${(attack * 1000).toFixed(0)}ms, release ${release.toFixed(2)}s,` +
+      ` cutoff ${Math.round(lerp(CUTOFF_RANGE[0], CUTOFF_RANGE[1], brightness))} Hz`;
+  }
+
+  const moodBar = document.getElementById("moods");
+  moodBar.innerHTML = Object.keys(MOODS)
+    .map((m) => `<button type="button" data-mood="${m}" aria-pressed="${m === "bright"}">${m}</button>`)
+    .join("");
+  moodBar.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-mood]");
+    if (!btn) return;
+    currentMood = btn.dataset.mood;
+    for (const b of moodBar.querySelectorAll("button")) {
+      b.setAttribute("aria-pressed", String(b === btn));
+    }
+    drawCell();
+  });
+
+  // The eight keys the instrument binds: A S D F G H J K.
+  const KEY_LABELS = ["A", "S", "D", "F", "G", "H", "J", "K"];
+  const keys = document.getElementById("keys");
+  keys.innerHTML = KEY_LABELS.map(
+    (label, i) => `<button type="button" data-degree="${i * 2}">
+      <span>${label}</span><span class="deg">${i * 2}</span>
+    </button>`,
+  ).join("");
+  keys.addEventListener("pointerdown", (e) => {
+    const btn = e.target.closest("button[data-degree]");
+    if (btn) playNote(Number(btn.dataset.degree));
+  });
+
+  document.getElementById("cascade").addEventListener("click", () => {
+    const ac = ensureAudio();
+    if (ac.state === "suspended") ac.resume();
+    const base = ac.currentTime + 0.02;
+    for (let i = 0; i < 9; i++) playNote(i + Math.floor(Math.random() * 3), base + i * 0.11);
+  });
+
+  for (const id of ["a-bright", "a-decay", "a-level", "a-pan"]) bindRange(id, () => {});
+
+  window.addEventListener("resize", drawCell);
+  drawCell();
+})();
+</script>

@@ -21,3 +21,6 @@ mise.local.toml
 # harness is CLAUDE.md (and any AGENTS.md), not this directory.
 .claude/
 .astro/
+
+# personal scratch/reference files, not part of the deliverable
+notes/
