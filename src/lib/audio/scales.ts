@@ -44,11 +44,16 @@ export const SCALE_SPAN = 5 * OCTAVES;
  * clamped note is musical, an exception is silence, and silence in an
  * instrument reads as broken.
  */
-export function freq(_degree: number, _mood: Mood): number {
-  throw new Error("not implemented — see plan.md Issue 2");
+export function freq(degree: number, mood: Mood): number {
+  const { root, steps } = MOODS[mood];
+  const clamped = Math.max(0, Math.min(SCALE_SPAN - 1, Math.round(degree)));
+  const octave = Math.floor(clamped / steps.length);
+  const step = clamped % steps.length;
+  const midi = root + 12 * octave + steps[step];
+  return 440 * 2 ** ((midi - 69) / 12);
 }
 
 /** Every frequency the mood can produce. Used by invariant test I3. */
-export function allFrequencies(_mood: Mood): number[] {
-  throw new Error("not implemented — see plan.md Issue 2");
+export function allFrequencies(mood: Mood): number[] {
+  return Array.from({ length: SCALE_SPAN }, (_, degree) => freq(degree, mood));
 }

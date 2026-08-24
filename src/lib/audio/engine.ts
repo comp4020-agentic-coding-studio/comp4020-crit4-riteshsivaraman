@@ -61,8 +61,58 @@ export type EngineOptions = {
   mood?: Mood;
 };
 
-export function createEngine(_options: EngineOptions = {}): Engine {
-  throw new Error("not implemented — see plan.md Issue 2");
+export function createEngine(options: EngineOptions = {}): Engine {
+  const context = options.context ?? new AudioContext();
+  const { input, master } = createMasterChain(context);
+  const pool = new VoicePool(context, input);
+
+  let mood: Mood = options.mood ?? "bright";
+  let started = false;
+
+  const noteFor = (spec: NoteSpec): Note => ({
+    frequency: freq(spec.degree, mood),
+    level: spec.level,
+    brightness: spec.brightness,
+    decay: spec.decay,
+    pan: spec.pan,
+  });
+
+  return {
+    play(spec) {
+      pool.play(noteFor(spec));
+    },
+    hold(spec) {
+      return pool.hold(noteFor(spec));
+    },
+    async resume() {
+      // BaseAudioContext has no resume() — only AudioContext and the fake
+      // used in tests do, and both implement it, so this is a safe cast.
+      await (context as AudioContext).resume();
+      started = true;
+    },
+    get started() {
+      return started;
+    },
+    get activeVoices() {
+      return pool.active;
+    },
+    setMood(next) {
+      mood = next;
+    },
+    get mood() {
+      return mood;
+    },
+    setLevel(level) {
+      const t = context.currentTime;
+      master.gain.setTargetAtTime(Math.max(0, Math.min(1, level)) * MASTER_GAIN, t, 0.02);
+    },
+    releaseAll() {
+      pool.releaseAll();
+    },
+    get context() {
+      return context;
+    },
+  };
 }
 
 /**
