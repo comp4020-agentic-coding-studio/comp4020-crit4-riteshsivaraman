@@ -1,5 +1,5 @@
 import { DEGREE_MUTATION_P } from "../constants";
-import type { Genome, Rng } from "./genome";
+import { CONTINUOUS_FIELDS, DEGREE_BOUNDS, clampGenome, type Genome, type Rng } from "./genome";
 
 /**
  * Box–Muller. Gaussian nudges beat uniform ones here because most children
@@ -28,8 +28,18 @@ export function gaussian(rng: Rng): number {
  * `drift` is the DRIFT control, 0..1. At 0 the child is an exact copy: the
  * player has turned evolution off, which is a legitimate way to play.
  */
-export function breed(_parent: Genome, _drift: number, _rng: Rng): Genome {
-  throw new Error("not implemented — see plan.md Issue 1");
+export function breed(parent: Genome, drift: number, rng: Rng): Genome {
+  const child = { ...parent };
+  for (const field of CONTINUOUS_FIELDS) {
+    child[field] = parent[field] + gaussian(rng) * drift * MUTATION_SCALE;
+  }
+  if (drift > 0 && rng() < DEGREE_MUTATION_P) {
+    const magnitude = rng() < 0.1 ? 2 : 1;
+    const sign = rng() < 0.5 ? -1 : 1;
+    const [lo, hi] = DEGREE_BOUNDS;
+    child.degree = Math.min(hi, Math.max(lo, parent.degree + sign * magnitude));
+  }
+  return clampGenome(child);
 }
 
 /** How far one standard deviation of drift moves a continuous field. */

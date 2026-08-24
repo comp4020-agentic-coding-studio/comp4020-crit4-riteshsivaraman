@@ -23,8 +23,12 @@ export type Ink = Readonly<Record<InkChannel, number>>;
  * Must be pure and referentially transparent — the render layer may cache
  * on genome identity.
  */
-export function inkOf(_g: Genome): Ink {
-  throw new Error("not implemented — see plan.md Issue 1");
+export function inkOf(g: Genome): Ink {
+  return {
+    pink: g.degree / (SCALE_SPAN - 1),
+    blue: g.size,
+    yellow: g.brightness,
+  };
 }
 
 /** Longest wavelength first, so the composite order is stable. */

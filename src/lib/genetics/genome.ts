@@ -67,13 +67,30 @@ export type Rng = () => number;
  * Exported so tests can fuzz it directly, and so `breed` has exactly one
  * place that enforces bounds rather than clamping field by field.
  */
-export function clampGenome(_g: Genome): Genome {
-  throw new Error("not implemented — see plan.md Issue 1");
+export function clampGenome(g: Genome): Genome {
+  const clamped = { ...g };
+  for (const field of CONTINUOUS_FIELDS) {
+    const [lo, hi] = GENOME_BOUNDS[field];
+    const value = g[field];
+    clamped[field] = Number.isFinite(value) ? Math.min(hi, Math.max(lo, value)) : lo;
+  }
+  const [degreeLo, degreeHi] = DEGREE_BOUNDS;
+  const degree = Number.isFinite(g.degree) ? Math.round(g.degree) : degreeLo;
+  clamped.degree = Math.min(degreeHi, Math.max(degreeLo, degree));
+  return clamped;
 }
 
 /** Uniform within GENOME_BOUNDS, `degree` uniform over DEGREE_BOUNDS. */
-export function randomGenome(_rng: Rng): Genome {
-  throw new Error("not implemented — see plan.md Issue 1");
+export function randomGenome(rng: Rng): Genome {
+  const [degreeLo, degreeHi] = DEGREE_BOUNDS;
+  const genome = {
+    degree: degreeLo + Math.round(rng() * (degreeHi - degreeLo)),
+  } as Genome;
+  for (const field of CONTINUOUS_FIELDS) {
+    const [lo, hi] = GENOME_BOUNDS[field];
+    genome[field] = lo + rng() * (hi - lo);
+  }
+  return clampGenome(genome);
 }
 
 /**
@@ -82,11 +99,14 @@ export function randomGenome(_rng: Rng): Genome {
  * screen is a higher note, which is the one mapping the invite line
  * promises ("higher is higher").
  */
-export function genomeFromGesture(_xNorm: number, _yNorm: number, _rng: Rng): Genome {
-  throw new Error("not implemented — see plan.md Issue 1");
+export function genomeFromGesture(_xNorm: number, yNorm: number, rng: Rng): Genome {
+  const genome = randomGenome(rng);
+  return clampGenome({ ...genome, degree: degreeFromY(yNorm) });
 }
 
 /** Map yNorm (0 = top) to a scale degree. Shared by pointer and tests. */
-export function degreeFromY(_yNorm: number): number {
-  throw new Error("not implemented — see plan.md Issue 1");
+export function degreeFromY(yNorm: number): number {
+  const [lo, hi] = DEGREE_BOUNDS;
+  const inverted = 1 - Math.min(1, Math.max(0, yNorm));
+  return Math.min(hi, Math.max(lo, Math.round(inverted * (hi - lo))));
 }
