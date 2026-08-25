@@ -188,7 +188,18 @@ class Voice {
   }
 
   release() {
-    this.scheduleRelease(this.ctx.currentTime);
+    if (this.releasing || this.done) return;
+    const t = this.ctx.currentTime;
+    // A held voice can have been sitting at peak for a long time with no
+    // automation event since the attack ramp ended. exponentialRampToValueAtTime
+    // interpolates from that old event, not from "now" — over a long hold the
+    // curve it computes has already decayed to NEAR_ZERO by the time this runs,
+    // so the release sounds like an instant cut instead of a tail. Re-anchor at
+    // the current value first, the same fix steal() below needs and for the
+    // same reason.
+    this.n.env.gain.cancelScheduledValues(t);
+    this.n.env.gain.setValueAtTime(Math.max(NEAR_ZERO, this.n.env.gain.value), t);
+    this.scheduleRelease(t);
   }
 
   /** Cut this voice short to make room. Fast fade, never an instant stop. */

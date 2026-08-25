@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { VOICE_CAP } from "../src/lib/constants";
+import { HOLD_NOTE_DECAY, RELEASE_RANGE, VOICE_CAP } from "../src/lib/constants";
 import { createEngine } from "../src/lib/audio/engine";
 import { MOODS, MOOD_ORDER, SCALE_SPAN, freq } from "../src/lib/audio/scales";
 import { VoicePool } from "../src/lib/audio/voices";
@@ -96,6 +96,51 @@ describe("I2 — the voice cap holds", () => {
     const first = ctx.oscillators[0];
     expect(first?.stopped).toBe(true);
     expect(first?.stopTime, "stolen voice stops instantly").toBeGreaterThan(ctx.currentTime);
+  });
+
+  it("releases a long-held voice with a real tail, not an instant cut", () => {
+    // Regression test: exponentialRampToValueAtTime interpolates from the
+    // *previous scheduled event* on the param, not from "now". For a voice
+    // that has been sitting at peak since its attack ramp ended, that
+    // previous event is far in the past — so releasing it must re-anchor
+    // the envelope at its current value at release time before ramping,
+    // the same fix steal() already applies. Without that anchor the ramp's
+    // computed curve has already decayed to near zero, and the release is
+    // effectively silent instead of taking releaseSeconds.
+    const ctx = new FakeAudioContext();
+    const bus = ctx.createGain();
+    const createdGains: ReturnType<typeof ctx.createGain>[] = [];
+    const originalCreateGain = ctx.createGain.bind(ctx);
+    ctx.createGain = () => {
+      const gain = originalCreateGain();
+      createdGains.push(gain);
+      return gain;
+    };
+    const pool = new VoicePool(asContext(ctx), bus as unknown as AudioNode);
+    const decay = HOLD_NOTE_DECAY;
+    const held = pool.hold({ frequency: 330, level: 0.6, brightness: 0.5, decay, pan: 0 });
+    // Voice() creates partialGain then env, in that order, per voice.
+    const envGain = (createdGains[1] as unknown as { gain: { events: Array<{ kind: string; value?: number; time?: number }> } }).gain;
+
+    // Sit at peak well past the attack ramp before releasing.
+    ctx.advance(10);
+    const releaseTime = ctx.currentTime;
+    held.release();
+
+    const setEvents = envGain.events.filter((e) => e.kind === "set");
+    const expEvents = envGain.events.filter((e) => e.kind === "exp");
+    const anchor = setEvents[setEvents.length - 1];
+    const ramp = expEvents[expEvents.length - 1];
+
+    expect(anchor?.time, "release must anchor the envelope at its current value first").toBeCloseTo(
+      releaseTime,
+      6,
+    );
+    const releaseSeconds = RELEASE_RANGE[0] + (RELEASE_RANGE[1] - RELEASE_RANGE[0]) * decay;
+    expect(ramp?.time, "the release ramp must last a full releaseSeconds tail").toBeCloseTo(
+      releaseTime + releaseSeconds,
+      6,
+    );
   });
 
   it("releases every voice on releaseAll", () => {
