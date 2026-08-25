@@ -1,4 +1,6 @@
 import {
+  AMBIENT_IMPULSE,
+  AMBIENT_SLEEP_SPEED,
   BREED_CHANCE,
   BREED_COOLDOWN_MS,
   BREED_MIN_ENERGY,
@@ -162,6 +164,7 @@ class WorldImpl implements World {
       lastSoundAt: -Infinity,
       lastBredAt: -Infinity,
       age: 0,
+      held: false,
     };
   }
 
@@ -173,6 +176,11 @@ class WorldImpl implements World {
     deaths: DeathEvent[],
   ): void {
     for (const o of this.organismList) {
+      if (!o.held && Math.hypot(o.vx, o.vy) < AMBIENT_SLEEP_SPEED) {
+        const angle = this.rng() * Math.PI * 2;
+        o.vx += Math.cos(angle) * AMBIENT_IMPULSE;
+        o.vy += Math.sin(angle) * AMBIENT_IMPULSE;
+      }
       integrate(o, dt);
       bounceWalls(o, this.width, this.height);
     }

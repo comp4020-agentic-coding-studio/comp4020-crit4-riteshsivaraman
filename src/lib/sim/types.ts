@@ -32,6 +32,10 @@ export type Organism = {
   lastBredAt: number;
   /** Seconds since spawn. Drives the visual pulse. */
   age: number;
+  /** True while a pointer is dragging this organism. Physics treats it as
+   *  infinite mass and pointer-driven: `integrate`/`bounceWalls` skip it,
+   *  `resolvePair` still lets it deflect and sound against others. */
+  held: boolean;
 };
 
 export type CollisionEvent = {

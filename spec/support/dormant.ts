@@ -80,7 +80,7 @@ export const SCAFFOLD: { label: string; issue: number; probe: () => unknown }[] 
   { label: "sim/world.createWorld", issue: 3, probe: () => createWorld({ width: 100, height: 100 }) },
   { label: "interaction/pointer.attachPointer", issue: 4, probe: () => attachPointer(null as never) },
   { label: "render/layers.createLayers", issue: 5, probe: () => createLayers(null as never, 10, 10) },
-  { label: "render/cells.drawPopulation", issue: 5, probe: () => drawPopulation(null as never, [], 0) },
+  { label: "render/cells.drawPopulation", issue: 5, probe: () => drawPopulation(null as never, [], 0, null as never) },
 ];
 
 /** Labels of everything still unimplemented, cheapest possible check. */

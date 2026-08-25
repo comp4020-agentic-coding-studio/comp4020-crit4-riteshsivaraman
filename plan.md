@@ -451,8 +451,18 @@ The gesture grammar. This is the module the crit actually judges.
 - **hold**: start a held voice on pointerdown; grow the nucleus; accumulate
   an offspring every `HOLD_SPAWN_INTERVAL` up to `HOLD_MAX_CLUSTER`; update
   the held voice's degree as the pointer moves (glide)
-- **release**: disperse the cluster along the drag vector, play their notes
-  staggered by `RELEASE_ARPEGGIO_MS`, release the held voice
+- **release**: disperse the cluster outward in a burst — evenly spaced
+  around the full circle, not a cone along the drag vector, since the
+  packed cluster is a ball and release reads as that ball bursting apart
+  — play their notes staggered by `RELEASE_ARPEGGIO_MS`, release the held
+  voice
+- **grab** (added post-Issue-4, while building Issue 5): pointerdown that
+  hits an existing organism drags it instead of seeding a new one — no tap
+  sound, no spawn. The organism is marked `held` so physics treats it as
+  pointer-driven and infinite-mass (still bumps and sounds against the rest
+  of the population while dragged); release keeps the last pointer-velocity
+  estimate as a fling. Reachable only through the real `attachPointer`, not
+  through hand-rolled pointer listeners — see `dev/render-preview.ts`.
 - **keyboard**: `A S D F G H J K` → 8 degrees; same three verbs; keydown
   plays and spawns, keyup releases. Ignore auto-repeat.
 - first gesture of any kind: `engine.resume()` and dismiss the invite
@@ -520,11 +530,14 @@ pointed at the diff.
 
 | Risk | Signal | Mitigation |
 |------|--------|------------|
-| Multiply blending muds up at high density | dense clumps go black | per-cell alpha ≤ 0.62; density-as-darkness is acceptable and arguably correct |
+| Multiply blending muds up at high density | dense clumps go black | per-cell alpha raised to 0.75 (from 0.62) post-Issue-4 to fix a washed-out palette; re-verified with `spawn200` that dense clumps still read as a deep overprint, not flat black — density-as-darkness is acceptable and arguably correct, but this is now closer to the edge, so re-check with `spawn200` before raising it again |
 | Three fullscreen layers too slow on mobile | FPS < 45 | the adaptive single-layer fallback in Issue 5, shipped not deferred |
 | Collision notes turn to mush | it sounds like rain | `MIN_COLLISION_SPEED` and the cooldown are the dials; raise them before touching anything else |
 | Held voice survives a pointercancel | a drone that won't stop | explicitly listed in Issue 4's done-when |
 | Light paper ground makes yellow ink invisible | yellow cells vanish | yellow never carries pitch — it's `brightness`, a secondary axis, and always co-printed with pink or blue |
+| Population reads as static once seeded | nothing drifts, looks frozen | `DRAG` raised to 0.999 (from 0.995) plus an ambient sleep-nudge in `sim/world.ts`, post-Issue-4; confirmed cells kept drifting between two screenshots 5s apart instead of settling to a stop |
+| A single growing nucleus disc didn't read as multiplying cells | breeding looked like one blob inflating, not division | `render/cells.ts` replaced the growing-nucleus + tiny-satellite-dot design with equal-sized buds (`BUD_RADIUS`, fixed) that divide off a random existing bud and pack together via overlap resolution, per direct feedback with a cancer-cell-doubling reference image; confirmed by rendering `drawCharge` at increasing `count` and checking for a non-overlapping, organically packed clump with no dominant central disc |
+| `dev/render-preview.ts`'s FPS fallback can trip into permanent DEGRADED mode from a single slow frame (e.g. right after page load) | preview stuck flat-colour with no grain | one-way flip by design (see Issue 5); reload the harness if it trips early — not a shipped-page concern until Issue 6 tunes the real threshold |
 
 ---
 

@@ -11,7 +11,7 @@ import {
 import { freq } from "../audio";
 import type { Engine, HeldVoice } from "../audio";
 import { degreeFromY, genomeFromGesture } from "../genetics";
-import type { World } from "../sim";
+import type { Organism, World } from "../sim";
 
 /**
  * The gesture grammar: tap · hold · release. This is the module the crit
@@ -75,7 +75,35 @@ type Gesture = {
   heldVoice: HeldVoice | null;
   clusterCount: number;
   holding: boolean;
+  /** Set instead of the tap/hold branch when pointerdown lands on an
+   *  existing organism: this pointer is dragging it, not seeding a new
+   *  one. `held` is set on the organism itself so physics treats it as
+   *  pointer-driven (see sim/physics.ts). */
+  dragging: Organism | null;
+  /** ms timestamp of the last pointermove while dragging, for the
+   *  instantaneous-velocity estimate that becomes the release fling. */
+  lastDragMoveAt: number;
 };
+
+/** Nearest organism whose radius contains (x, y), preferring the closest
+ *  centre when discs overlap. Skips organisms already being dragged by
+ *  another pointer. Linear scan — population is capped at MAX_POPULATION
+ *  (220), cheap next to the physics step already run every frame. */
+function hitTest(world: World, x: number, y: number): Organism | null {
+  let best: Organism | null = null;
+  let bestDistSq = Infinity;
+  for (const o of world.organisms) {
+    if (o.held) continue;
+    const dx = o.x - x;
+    const dy = o.y - y;
+    const distSq = dx * dx + dy * dy;
+    if (distSq <= o.radius * o.radius && distSq < bestDistSq) {
+      best = o;
+      bestDistSq = distSq;
+    }
+  }
+  return best;
+}
 
 /**
  * Wire up pointer input.
@@ -85,8 +113,8 @@ type Gesture = {
  *    leaves the canvas still tracks.
  *  - `touch-action: none` on the canvas (set in CSS, not here) or mobile
  *    scroll will eat every drag.
- *  - Press under HOLD_THRESHOLD_MS is a tap; at or over it, the hold voice
- *    has already started, so the tap branch must not double-trigger.
+ *  - Tap sounds and spawns synchronously on pointerdown, before the hold
+ *    timer is even set. Nothing about a hold changes that first note.
  *  - Moving during a hold updates the held voice's degree — that is the
  *    glide, and it is the most expressive thing in the instrument.
  *  - Release disperses along the drag vector, notes staggered by
@@ -126,8 +154,10 @@ export function attachPointer(deps: PointerDeps): PointerRig {
     }, HOLD_SPAWN_INTERVAL);
   }
 
-  /** Stop timers and the held voice; leaves cluster/drag data on `g` intact
-   *  for `disperse` to read. Every path out of a hold comes through here. */
+  /** Stop timers, the held voice, and any drag; leaves cluster data on `g`
+   *  intact for `disperse` to read. Every path out of a hold or a drag
+   *  comes through here — a stuck drone and a stuck drag are the same
+   *  class of bug. */
   function teardown(id: number): Gesture | undefined {
     const g = gestures.get(id);
     if (!g) return undefined;
@@ -138,16 +168,23 @@ export function attachPointer(deps: PointerDeps): PointerRig {
       g.heldVoice.release();
       onChargeChange(null);
     }
+    if (g.dragging) {
+      // Leave vx/vy as the last pointer-velocity estimate — that's the
+      // fling — and only now let physics drive the organism again.
+      g.dragging.held = false;
+    }
     return g;
   }
 
   function disperse(g: Gesture): void {
     if (g.clusterCount === 0) return;
 
-    const dx = g.lastXNorm - g.startXNorm;
-    const dy = g.lastYNorm - g.startYNorm;
-    const dragMag = Math.hypot(dx, dy);
-    const baseAngle = dragMag < 1e-4 ? rng() * Math.PI * 2 : Math.atan2(dy, dx);
+    // Evenly spaced around the full circle (plus jitter) rather than a
+    // narrow cone along the drag vector — the packed cluster is a ball of
+    // buds sitting on top of each other, and release should read as that
+    // ball bursting outward in every direction, not the whole thing
+    // flying off one way.
+    const baseAngle = rng() * Math.PI * 2;
 
     const originX = g.lastXNorm * world.width;
     const originY = g.lastYNorm * world.height;
@@ -155,7 +192,8 @@ export function attachPointer(deps: PointerDeps): PointerRig {
     const brightness = brightnessFromX(g.lastXNorm);
 
     for (let i = 0; i < g.clusterCount; i++) {
-      const angle = baseAngle + (rng() - 0.5) * DISPERSAL_SPREAD_RAD;
+      const angle =
+        baseAngle + (i / g.clusterCount) * Math.PI * 2 + (rng() - 0.5) * DISPERSAL_SPREAD_RAD;
       const genome = genomeFromGesture(g.lastXNorm, g.lastYNorm, rng);
       const vx = Math.cos(angle) * DISPERSAL_SPEED;
       const vy = Math.sin(angle) * DISPERSAL_SPEED;
@@ -175,8 +213,8 @@ export function attachPointer(deps: PointerDeps): PointerRig {
   }
 
   function endGesture(event: PointerEvent): void {
-    const g = teardown(event.pointerId);
-    if (g?.holding) disperse(g);
+    const torn = teardown(event.pointerId);
+    if (torn?.holding) disperse(torn);
   }
 
   function onPointerDown(event: PointerEvent): void {
@@ -185,9 +223,36 @@ export function attachPointer(deps: PointerDeps): PointerRig {
     canvas.setPointerCapture(event.pointerId);
 
     const { xNorm, yNorm } = normalisePoint(canvas, event);
-    const genome = genomeFromGesture(xNorm, yNorm, rng);
+    const x = xNorm * world.width;
+    const y = yNorm * world.height;
 
-    // Tap sounds immediately, in this handler — do not wait for the sim.
+    const hit = hitTest(world, x, y);
+    if (hit) {
+      // Grab an existing cell instead of seeding a new one: no tap sound,
+      // no spawn. Physics (sim/physics.ts) treats `held` organisms as
+      // pointer-driven and infinite-mass, so it still bumps and sounds
+      // against everything else while dragged.
+      hit.held = true;
+      const gesture: Gesture = {
+        startXNorm: xNorm,
+        startYNorm: yNorm,
+        lastXNorm: xNorm,
+        lastYNorm: yNorm,
+        holdTimer: null,
+        spawnTimer: null,
+        heldVoice: null,
+        clusterCount: 0,
+        holding: false,
+        dragging: hit,
+        lastDragMoveAt: event.timeStamp,
+      };
+      gestures.set(event.pointerId, gesture);
+      return;
+    }
+
+    // The tap: sounds and spawns right here, synchronously, before the
+    // hold timer is even set. See the file header rule.
+    const genome = genomeFromGesture(xNorm, yNorm, rng);
     engine.play({
       degree: degreeFromY(yNorm),
       level: genome.size,
@@ -195,7 +260,7 @@ export function attachPointer(deps: PointerDeps): PointerRig {
       decay: genome.decay,
       pan: panFromX(xNorm),
     });
-    world.spawn(genome, xNorm * world.width, yNorm * world.height);
+    world.spawn(genome, x, y);
 
     const gesture: Gesture = {
       startXNorm: xNorm,
@@ -207,6 +272,8 @@ export function attachPointer(deps: PointerDeps): PointerRig {
       heldVoice: null,
       clusterCount: 0,
       holding: false,
+      dragging: null,
+      lastDragMoveAt: event.timeStamp,
     };
     gesture.holdTimer = setTimeout(() => {
       gesture.holdTimer = null;
@@ -222,6 +289,24 @@ export function attachPointer(deps: PointerDeps): PointerRig {
     const { xNorm, yNorm } = normalisePoint(canvas, event);
     g.lastXNorm = xNorm;
     g.lastYNorm = yNorm;
+
+    if (g.dragging) {
+      const o = g.dragging;
+      const dtS = Math.max((event.timeStamp - g.lastDragMoveAt) / 1000, 1 / 1000);
+      g.lastDragMoveAt = event.timeStamp;
+
+      const targetX = Math.min(Math.max(xNorm * world.width, o.radius), world.width - o.radius);
+      const targetY = Math.min(Math.max(yNorm * world.height, o.radius), world.height - o.radius);
+      // Instantaneous pointer velocity, not a smoothed average — a fast
+      // swipe into a cluster should feel exactly as fast as it looks, and
+      // it's also what makes the eventual release fling feel connected to
+      // the gesture that produced it.
+      o.vx = (targetX - o.x) / dtS;
+      o.vy = (targetY - o.y) / dtS;
+      o.x = targetX;
+      o.y = targetY;
+      return;
+    }
 
     if (g.holding && g.heldVoice) {
       g.heldVoice.update({
