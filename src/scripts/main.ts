@@ -3,10 +3,10 @@
 // was proven against: same interaction module, same audio engine, same
 // render pipeline, just against a real page instead of a scratch one.
 import { createEngine } from "../lib/audio";
-import { attachControls, attachKeyboard, attachPointer, type ChargeState } from "../lib/interaction";
+import { attachControls, attachKeyboard, attachPointer } from "../lib/interaction";
 import { GRAIN_TILE, MAX_DPR } from "../lib/constants";
 import { createJolt, createLayers } from "../lib/render/layers";
-import { drawCharge, drawPopulation, type Charge } from "../lib/render/cells";
+import { drawPopulation } from "../lib/render/cells";
 import { createGrainTile, paintGrain } from "../lib/render/grain";
 import { createWorld } from "../lib/sim";
 
@@ -47,16 +47,11 @@ function dismissInvite(): void {
   invite.setAttribute("data-dismissed", "");
 }
 
-let charge: Charge | null = null;
-
 attachPointer({
   canvas,
   world,
   engine,
   onFirstGesture: dismissInvite,
-  onChargeChange: (next: ChargeState | null) => {
-    charge = next;
-  },
 });
 
 attachKeyboard({
@@ -113,11 +108,9 @@ function frame(now: number): void {
   if (layers.degraded) {
     layers.composite(ctx, j);
     drawPopulation(layers, world.organisms, now, ctx);
-    if (charge) drawCharge(layers, charge, now, ctx);
   } else {
     layers.clear();
     drawPopulation(layers, world.organisms, now, ctx);
-    if (charge) drawCharge(layers, charge, now, ctx);
     layers.composite(ctx, j);
     if (grainPattern) paintGrain(ctx, grainPattern);
   }

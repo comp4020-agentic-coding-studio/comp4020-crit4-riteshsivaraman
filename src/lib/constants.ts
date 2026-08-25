@@ -73,22 +73,11 @@ export const DEGREE_MUTATION_P = 0.3;
 // ─── interaction ─────────────────────────────────────────────────────────
 /** A press shorter than this is a tap, not a hold. */
 export const HOLD_THRESHOLD_MS = 140;
-export const HOLD_SPAWN_INTERVAL = 190;
-export const HOLD_MAX_CLUSTER = 12;
-/** Stagger between the notes of a released cluster — a fast arpeggio reads
- *  as a chord but stays under the voice cap far better than a true stack. */
-export const RELEASE_ARPEGGIO_MS = 38;
-/** Level and decay of the sustained voice while charging a hold. Not in
- *  plan.md — added while building Issue 4 because the held voice needs a
- *  full NoteSpec and there is no genome to read one from until release.
- *  Not yet tuned by ear; revisit at the sound bench. */
+/** Level and decay of the sustained voice while dragging a held cell. Not
+ *  in plan.md — added while building Issue 4 because the held voice needs
+ *  a full NoteSpec. Not yet tuned by ear; revisit at the sound bench. */
 export const HOLD_NOTE_LEVEL = 0.8;
 export const HOLD_NOTE_DECAY = 0.6;
-/** Speed and angular spread given to a released cluster as it disperses
- *  along the drag vector. Same status as the two constants above: added
- *  for Issue 4, not bench-tuned. */
-export const DISPERSAL_SPEED = 260; // px/s
-export const DISPERSAL_SPREAD_RAD = Math.PI / 5;
 
 // ─── render ──────────────────────────────────────────────────────────────
 export const MAX_DPR = 2;
@@ -135,25 +124,5 @@ export const NUCLEUS_DARKEN = 0.3;
  *  from genome.speed 0..1. Not bench-tuned — added while building Issue 5. */
 export const PULSE_AMPLITUDE = 0.06;
 export const PULSE_RATE_RANGE: readonly [number, number] = [0.6, 2.2];
-/** Charge cluster: no single growing nucleus — every accumulated offspring
- *  is an equal-sized "bud" that divides off an existing bud and packs in
- *  next to it, mitosis-style (see reference: doubling cancer cells, not
- *  orbiting electrons). Replaces the old growing-disc + tiny-satellite-dot
- *  look while polishing feel post-Issue-4, per direct feedback that the
- *  single large nucleus didn't read as multiplying cells; revisit at the
- *  visual bench. BUD_RADIUS was CHARGE_RADIUS_RANGE's old minimum (10px) —
- *  reused as the fixed per-bud size now that there's no nucleus to dwarf it. */
-export const BUD_GROW_MS = 280;
-export const BUD_RADIUS = 10;
-/** Centering + overlap-resolution passes run each time a bud is added, so
- *  the cluster settles into a tight, roughly circular ball (see reference:
- *  packed nucleons) without needing a stable layout algorithm. Raised from
- *  6 to 10 per direct feedback that pure overlap-resolution alone left the
- *  cluster reading as a loose, branchy chain rather than a bound clump. */
-export const BUD_PACK_ITERATIONS = 10;
-/** Settled-bud breathing amplitude, as a fraction of BUD_RADIUS, and rate
- *  (Hz) — a faint life-sign so a cluster of buds doesn't read as static. */
-export const BUD_PULSE_AMPLITUDE = 0.15;
-export const BUD_PULSE_HZ = 1.1;
 
 export type InkChannel = "pink" | "blue" | "yellow";
