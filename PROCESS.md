@@ -1,85 +1,45 @@
 # Process overview
 
-<!-- TEMPLATE: this file is a shape to fill in, not a form. Replace everything
-     in it with your own overview, and delete this comment — `pnpm
-     check:evidence` will remind you if it's still here. -->
-
-A reading-guide to how the work came together --- a map to your process, not an
-essay about it. Markers read this file and follow its citations; they don't
-trawl the repo for evidence you didn't point at, so if a moment mattered, cite
-it.
-
-This file is the shape; the course site's
-[assessment page](https://comp.anu.edu.au/courses/comp4020-agentic-coding-studio/topics/assessment/#what-you-submit)
-is the requirement, and its
-[word counts](https://comp.anu.edu.au/courses/comp4020-agentic-coding-studio/topics/assessment/#word-counts)
-cover every deliverable.
-
 ## What I built
 
-One paragraph: the thing, and the idea behind it.
+The name of the website is **Culture**, an ecosystem-inspired instrument. The canvas simulates a simple cellular ecosystem where you can cells can move around, collide, reproduce, and eventually die.
+
+A tap makes a sound, and the cell it leaves behind keeps bouncing and keeps sounding on every collision. The ecosystem is therefore the accompaniment the instrument leaves behind, not the instrument itself.
 
 ## The moments that mattered
 
-Three or four for an assignment; fewer is fine for a weekly prototype. Keep the
-list short so each moment has room to do all four jobs:
+1. **Letting Opus dispatch its own subagents instead of briefing each one myself.**
 
-1. **what happened** --- the problem, or the thing that went wrong
-2. **what you did instead of the obvious thing** --- the call you made, and why
-   it beat the obvious one
-3. **how you knew it was right** --- the check you ran, the viewport you looked
-   at, what you read before accepting the diff
-4. **the citation** --- a commit or commit range, a `CLAUDE.md` change, a check
-   that went from red to green, a prompt paired with the commit it produced
+   I had five changes queued and had been opening a build session per issue by
+   hand. Instead I gave the whole set to the Opus session that had written
+   `plan.md` and let it spin the subagents off itself
+   ([`dde2f92`](https://github.com/comp4020-agentic-coding-studio/comp4020-crit4-riteshsivaraman/commit/dde2f92)). Because it had written the plan, it could
+   hand each agent the context that mattered without me re-explaining it, and it
+   worked out which issues could run at the same time by which files each one
+   owned.
 
-Jobs 2 and 3 are the ones the repo can't tell a reader on its own, so they're
-where the marks are. The strongest moments are the ones where a correction
-landed in the **harness** --- the standards and checks your work has to satisfy
---- rather than in a retry: a rule added to `CLAUDE.md`, a check wired up, an
-attempt thrown away. Retrying until it passes is the routine case, and changing
-what the work runs against is the skilled one.
+   What told me this was right, rather than just faster: three of them landed on
+   the same commit timestamp (`8354573`, `0d61dc2` and `a7e18d3`), and every one
+   of the five was a clean single-purpose commit. I had each agent verify
+   narrowly with `vitest run` and `astro check`, because agents sharing a tree
+   race on `dist/`, then ran the full `CULTURE_SHIP=1 pnpm check` myself once
+   they had all landed, and read each diff
+   ([`bde074c...091fa6b`](https://github.com/comp4020-agentic-coding-studio/comp4020-crit4-riteshsivaraman/compare/bde074c...091fa6b)).
 
-Cite each moment as a link whose text is the commit hash or range and whose
-target is this repo's commit or compare URL, so a reader clicks straight to the
-evidence:
+2. **The harness became a guide for how I work, not just how Claude works.**
 
-- one commit: [`a1b2c3d`](https://github.com/YOUR-ORG/YOUR-REPO/commit/a1b2c3d)
-- a range:
-  [`a1b2c3d...e4f5a6b`](https://github.com/YOUR-ORG/YOUR-REPO/compare/a1b2c3d...e4f5a6b)
+   In the planning session I added a "Multi-model workflow" section to
+   `CLAUDE.md`. Some of the instructions were to clear the context here, one subsystem per session, review in a
+   fresh session etc. I asked Claude to turn it into a flowchart, which is how I
+   checked the sequence held together before relying on it. Nearly every rule in
+   it turned out to be an instruction to me, not to Claude, but I believe it was important for Claude to understand how I'd be working with it as a user. For example, it was conscious about the next steps, when context would be cleared, and where to look if not given enough context.
 
-To pair a prompt with the commit it produced, quote the prompt (curated, not a
-full transcript) next to the citation:
-
-> the prompt, verbatim
-
-Screenshots are welcome where one carries the verification better than a
-sentence does. Commit the file to this repo and link it with a **relative**
-path, which is what makes it render on GitHub: `![alt text](docs/before.png)`.
-Images don't count towards the word count and don't replace the citation.
-
-### A worked moment, for shape
-
-Delete this section along with the rest of the boilerplate --- it's here to show
-the four jobs in one paragraph, not to be imitated in content.
-
-> The date formatter kept coming back with `toLocaleDateString()` and no locale
-> argument, so the same build rendered differently on my machine and in CI. I'd
-> already re-prompted it twice, which fixed the line but not the habit, so the
-> third time I put the rule in `CLAUDE.md` instead
-> ([`3f9ac21`](https://github.com/YOUR-ORG/YOUR-REPO/commit/3f9ac21)) and added
-> a spec test that fails on a bare `toLocaleDateString`. That's what told me it
-> had actually taken: the test went red against the old code and green against
-> the new, and the next two features it wrote passed it without prompting
-> ([`3f9ac21...b7e0d14`](https://github.com/YOUR-ORG/YOUR-REPO/compare/3f9ac21...b7e0d14)).
-
-## Before you ship
-
-`pnpm check:evidence` verifies your citations resolve to real commits, that a
-reflection entry the marker reads is in `reflections/`, and that your
-`CLAUDE.md` is there --- before a marker ever opens the file. It checks that
-your map is traceable, not that it is good: the marker judges whether your
-small, deliberately chosen set of moments shows real judgement and reflection. A
-green check is not a substitute for that curation.
-
-Images aren't checked: whether one renders is visible the moment you look. Open
-this file on GitHub and look at it before you ship.
+   The rule I was least sure of was "one subsystem per session". It held
+   most places I followed it, where those sessions produced small commits that touched
+   only their own module. In the initial planning stage, I had Opus divide the workload into six stage-based Github issues. However, Issue 5 was the exception: it ran far longer than any
+   other and came out at 910 insertions across 12 files, reaching into
+   `pointer.ts`, `physics.ts` and `constants.ts`, which the render work had no
+   business changing ([`a1f585a`](https://github.com/comp4020-agentic-coding-studio/comp4020-crit4-riteshsivaraman/commit/a1f585a)). That is what convinced me
+   the problem was the issue rather than the rule. Opus had written one issue that
+   was really three sessions of work. Sizing an issue to a session is a
+   judgement I still have to make one at a time.
