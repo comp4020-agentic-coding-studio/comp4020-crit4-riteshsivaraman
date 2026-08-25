@@ -3,7 +3,7 @@
 The guide for build sessions. Read this with `@plan.md` plus **one**
 GitHub issue, then build that one module and `/clear`.
 
-Concept and scope live in `notes/idea.md` (gitignored scratch). This file is the *how*: settled
+Concept and scope live in `notes/idea.md`. This file is the *how*: settled
 numbers, module boundaries, contracts, and the design system. Where the two
 disagree, this file wins — it's the later thought.
 

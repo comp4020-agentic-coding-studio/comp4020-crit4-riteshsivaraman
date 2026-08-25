@@ -113,8 +113,9 @@ This crit uses Opus to plan and Sonnet to build, deliberately:
   Opus**, once real invariants exist --- not added ad hoc in whichever
   session happens to notice something.
 
-Full reasoning in `notes/context-and-workflow-insights.md`; the flowchart
-is at [Plan, Build, Ship](https://claude.ai/code/artifact/e31ab127-41fc-41a2-a3a0-f155996b6af8).
+Full reasoning is in `notes/context-and-workflow-insights.md`, which stays
+local scratch and is not in this repo; the flowchart is at
+[Plan, Build, Ship](https://claude.ai/code/artifact/e31ab127-41fc-41a2-a3a0-f155996b6af8).
 
 ## This file is yours
 

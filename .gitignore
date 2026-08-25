@@ -22,5 +22,7 @@ mise.local.toml
 .claude/
 .astro/
 
-# personal scratch/reference files, not part of the deliverable
-notes/
+# personal scratch/reference files, not part of the deliverable — except the
+# idea doc, which is the design record PROCESS.md and plan.md refer to
+notes/*
+!notes/idea.md
