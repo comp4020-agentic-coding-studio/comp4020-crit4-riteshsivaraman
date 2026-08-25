@@ -132,27 +132,21 @@ nav a {
   min-width: 3.5rem;
 }
 
-.segmented {
-  display: flex;
-}
-
-.segmented button {
+#mood-input {
   font-family: var(--face-utility);
   font-size: var(--size-value);
   padding: var(--s1) var(--s3);
   background: var(--paper);
   color: var(--ink-text);
   border: 1px solid var(--ink-text);
-  border-right-width: 0;
+  border-radius: 0;
+  appearance: none;
   cursor: pointer;
 }
 
-.segmented button:last-child {
-  border-right-width: 1px;
-}
-
-.segmented button[aria-pressed="true"] {
-  background: var(--ink-pink);
+#mood-input:focus-visible {
+  outline: 2px solid var(--ink-blue);
+  outline-offset: 2px;
 }
 
 input[type="range"] {

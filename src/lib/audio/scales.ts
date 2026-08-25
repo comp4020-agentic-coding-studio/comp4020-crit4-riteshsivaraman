@@ -10,7 +10,7 @@
  * file, that is the bug.
  */
 
-export type Mood = "bright" | "deep" | "open";
+export type Mood = "bright" | "deep" | "open" | "warm" | "night" | "glass" | "sour";
 
 export type ScaleDef = {
   /** MIDI note of degree 0. */
@@ -22,14 +22,32 @@ export type ScaleDef = {
 };
 
 export const MOODS: Readonly<Record<Mood, ScaleDef>> = {
-  bright: { root: 60, steps: [0, 2, 4, 7, 9], label: "bright" }, // C major pentatonic
-  deep: { root: 45, steps: [0, 3, 5, 7, 10], label: "deep" }, //    A minor pentatonic, low
-  open: { root: 50, steps: [0, 2, 5, 7, 9], label: "open" }, //     D suspended
+  bright: { root: 60, steps: [0, 2, 4, 7, 9], label: "bright" }, //       C major pentatonic
+  deep: { root: 45, steps: [0, 3, 5, 7, 10], label: "deep" }, //          A minor pentatonic, low
+  open: { root: 50, steps: [0, 2, 5, 7, 9], label: "open" }, //           D suspended
+  warm: { root: 53, steps: [0, 2, 5, 7, 10], label: "warm" }, //          F mixolydian pentatonic
+  night: { root: 55, steps: [0, 1, 5, 7, 8], label: "night" }, //         G in-sen, the dark one
+  glass: { root: 60, steps: [0, 2, 4, 6, 8, 10], label: "glass" }, //     whole tone; no root, floats
+  sour: { root: 57, steps: [0, 3, 5, 6, 7, 10], label: "sour" }, //       A blues, flat five and all
 };
 
-export const MOOD_ORDER = ["bright", "deep", "open"] as const satisfies readonly Mood[];
+export const MOOD_ORDER = [
+  "bright",
+  "deep",
+  "open",
+  "warm",
+  "night",
+  "glass",
+  "sour",
+] as const satisfies readonly Mood[];
 
-/** Degrees span three octaves. All moods have 5 steps, so 15 degrees. */
+/**
+ * Degrees span three octaves for a 5-step scale, so 15 degrees. `freq()`
+ * derives the octave from `steps.length` generically, so a 6-step scale
+ * (`glass`, `sour`) simply spans 2.5 octaves instead of 3 — SCALE_SPAN
+ * itself stays fixed across every mood. Do not make it per-mood: degree
+ * bounds, genome clamping and ink normalisation all assume this constant.
+ */
 export const OCTAVES = 3;
 export const SCALE_SPAN = 5 * OCTAVES;
 

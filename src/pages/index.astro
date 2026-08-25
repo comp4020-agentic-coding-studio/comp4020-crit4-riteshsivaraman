@@ -20,12 +20,16 @@ import Layout from "../layouts/Layout.astro";
 
   <div class="specimen" id="specimen">
     <div class="row">
-      <span class="row-label" id="mood-label">Mood</span>
-      <div class="segmented" role="group" aria-labelledby="mood-label" data-control="mood">
-        <button type="button" data-mood="bright" aria-pressed="true">bright</button>
-        <button type="button" data-mood="deep" aria-pressed="false">deep</button>
-        <button type="button" data-mood="open" aria-pressed="false">open</button>
-      </div>
+      <label class="row-label" for="mood-input">Mood</label>
+      <select id="mood-input" data-control="mood">
+        <option value="bright" selected>bright</option>
+        <option value="deep">deep</option>
+        <option value="open">open</option>
+        <option value="warm">warm</option>
+        <option value="night">night</option>
+        <option value="glass">glass</option>
+        <option value="sour">sour</option>
+      </select>
     </div>
     <div class="row">
       <label class="row-label" for="drift-input">Drift</label>
