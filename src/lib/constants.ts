@@ -101,12 +101,17 @@ export const REGISTRATION: Readonly<Record<InkChannel, readonly [number, number]
 };
 export const JOLT_SCALE = 3.5;
 export const JOLT_DECAY_MS = 140;
-/** ★-adjacent: plan.md §9 originally capped this at 0.62 as the mitigation
- *  for "multiply blending muds up at high density". Raised while polishing
- *  feel post-Issue-4 — the palette read washed out at the old value. Before
- *  changing again, re-check a `spawn200` dense clump in dev/render-preview
- *  still reads as a deep overprint and not flat black; see plan.md §9/§6. */
-export const CELL_ALPHA = 0.75;
+/** ★-adjacent: 0.62 is the design artifact's value, confirmed against its
+ *  §2.5 panel — a soft rose, a medium sky blue, a soft lemon, with the triple
+ *  overlap a warm dark olive-brown. Raised to 0.75 post-Issue-4 for more
+ *  saturated single cells, but working the multiply forward from `--paper`
+ *  showed that traded away the six overprint colours §2.2 promises: at 0.75
+ *  the triple overlap crushes to near-black on screen, indistinguishable
+ *  from flat density-as-darkness. The six colours are the point of the
+ *  direction, so 0.62 wins. Before raising it again, re-check a dense clump
+ *  still reads as a deep warm overprint and not flat black; see plan.md
+ *  §9/§6. */
+export const CELL_ALPHA = 0.62;
 export const GRAIN_ALPHA = 0.05;
 export const GRAIN_TILE = 128;
 /** Rolling FPS below this for FPS_FALLBACK_MS drops to single-layer mode. */
