@@ -41,6 +41,9 @@ export type Organism = {
 export type CollisionEvent = {
   a: Organism;
   b: Organism;
+  /** The organism whose degree voices this collision: the smaller radius,
+   *  ties broken by the lower id so the choice never depends on grid order. */
+  readonly voice: Organism;
   /** Relative approach speed at contact, px/s. */
   speed: number;
   /** Contact point, for the flash and the registration jolt. */

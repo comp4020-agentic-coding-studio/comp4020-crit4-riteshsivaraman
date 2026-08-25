@@ -101,7 +101,7 @@ function frame(now: number): void {
   for (const collision of result.collisions) {
     jolt.add(collision.energy);
     engine.play({
-      degree: collision.a.genome.degree,
+      degree: collision.voice.genome.degree,
       level: collision.energy,
       brightness: (collision.a.genome.brightness + collision.b.genome.brightness) / 2,
       decay: (collision.a.genome.decay + collision.b.genome.decay) / 2,

@@ -197,7 +197,9 @@ class WorldImpl implements World {
         // still gated would receive a second event inside its own window.
         if (aReady && bReady) {
           const energy = Math.min(1, contact.speed / MAX_EVENT_SPEED);
-          collisions.push({ a, b, speed: contact.speed, x: contact.x, y: contact.y, energy });
+          const voice =
+            a.radius < b.radius ? a : b.radius < a.radius ? b : a.id < b.id ? a : b;
+          collisions.push({ a, b, voice, speed: contact.speed, x: contact.x, y: contact.y, energy });
           a.lastSoundAt = now;
           b.lastSoundAt = now;
         }

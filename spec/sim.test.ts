@@ -6,6 +6,7 @@ import {
   MIN_COLLISION_SPEED,
 } from "../src/lib/constants";
 import { randomGenome } from "../src/lib/genetics";
+import type { CollisionEvent } from "../src/lib/sim/types";
 import { createWorld } from "../src/lib/sim/world";
 import { describeWhenImplemented } from "./support/dormant";
 
@@ -131,5 +132,57 @@ describeWhenImplemented("I5 — collision events are rate limited", probe, () =>
         expect(event.energy).toBeLessThanOrEqual(1);
       }
     }
+  });
+});
+
+describeWhenImplemented("A collision's voice is chosen by the collision, not grid order", probe, () => {
+  // Two organisms placed already overlapping and flying straight at each
+  // other collide on the very first substep, regardless of spawn order.
+  // `firstSpawnFirst` controls which one is spawned (and so which one the
+  // grid happens to hand to `forEachPair` as `a`) — the whole point of this
+  // suite is that it must not matter.
+  function collide(
+    smallSize: number,
+    bigSize: number,
+    firstSpawnFirst: "small" | "big",
+  ): { event: CollisionEvent; smallId: number; bigId: number } {
+    const rng = seeded(42);
+    const world = createWorld({ width: 400, height: 300, rng });
+    const smallGenome = { ...randomGenome(rng), size: smallSize, degree: 1 };
+    const bigGenome = { ...randomGenome(rng), size: bigSize, degree: 2 };
+
+    let small, big;
+    if (firstSpawnFirst === "small") {
+      small = world.spawn(smallGenome, 150, 150, { vx: 300, vy: 0 });
+      big = world.spawn(bigGenome, 160, 150, { vx: -300, vy: 0 });
+    } else {
+      big = world.spawn(bigGenome, 160, 150, { vx: -300, vy: 0 });
+      small = world.spawn(smallGenome, 150, 150, { vx: 300, vy: 0 });
+    }
+    if (!small || !big) throw new Error("spawn failed in test setup");
+
+    const { collisions } = world.step(1 / 60, 1000);
+    expect(collisions.length, "the overlapping pair must collide on the first step").toBe(1);
+    return { event: collisions[0], smallId: small.id, bigId: big.id };
+  }
+
+  it("voices the smaller organism, regardless of which one the grid visits first", () => {
+    const spawnedSmallFirst = collide(0.12, 1, "small");
+    expect(spawnedSmallFirst.event.voice.genome.size).toBe(0.12);
+
+    const spawnedBigFirst = collide(0.12, 1, "big");
+    expect(spawnedBigFirst.event.voice.genome.size).toBe(0.12);
+  });
+
+  it("breaks a tie on equal radius by the lower id, stable across insertion order", () => {
+    const spawnedFirstFirst = collide(0.5, 0.5, "small");
+    expect(spawnedFirstFirst.event.voice.id).toBe(
+      Math.min(spawnedFirstFirst.smallId, spawnedFirstFirst.bigId),
+    );
+
+    const spawnedSecondFirst = collide(0.5, 0.5, "big");
+    expect(spawnedSecondFirst.event.voice.id).toBe(
+      Math.min(spawnedSecondFirst.smallId, spawnedSecondFirst.bigId),
+    );
   });
 });
