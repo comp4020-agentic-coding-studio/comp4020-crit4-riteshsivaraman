@@ -21,13 +21,7 @@
  *   vb   += (j / mb) · n
  */
 
-import {
-  DRAG,
-  POSITIONAL_CORRECTION,
-  RADIUS_RANGE,
-  RESTITUTION_RANGE,
-  WALL_RESTITUTION,
-} from "../constants";
+import { POSITIONAL_CORRECTION, RADIUS_RANGE, RESTITUTION_RANGE } from "../constants";
 import type { Organism } from "./types";
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -35,18 +29,21 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 export const radiusOf = (size: number) => lerp(RADIUS_RANGE[0], RADIUS_RANGE[1], size);
 /** Area-proportional. A cell twice the radius is four times as hard to shove. */
 export const massOf = (radius: number) => (radius * radius) / 100;
-export const restitutionOf = (bounce: number) =>
-  lerp(RESTITUTION_RANGE[0], RESTITUTION_RANGE[1], bounce);
+/** `scale` is the live BOUNCE_RESTITUTION_SCALE_RANGE multiplier (Issue 13,
+ *  WorldParams.bounce); defaults to 1 so every existing caller is unchanged. */
+export const restitutionOf = (bounce: number, scale = 1) =>
+  lerp(RESTITUTION_RANGE[0], RESTITUTION_RANGE[1], bounce) * scale;
 
 /** One substep of motion for one organism. Call with FIXED_DT.
  *  A held (dragged) organism has its x/y driven by the pointer, not by
- *  velocity — skip the motion update, but life/age keep ticking. */
-export function integrate(o: Organism, dt: number): void {
+ *  velocity — skip the motion update, but life/age keep ticking.
+ *  `drag` is the live VISCOSITY_DRAG_RANGE value (Issue 13, WorldParams.viscosity). */
+export function integrate(o: Organism, dt: number, drag: number): void {
   if (!o.held) {
     o.x += o.vx * dt;
     o.y += o.vy * dt;
-    o.vx *= DRAG;
-    o.vy *= DRAG;
+    o.vx *= drag;
+    o.vy *= drag;
   }
   o.age += dt;
   o.life -= dt;
@@ -61,22 +58,30 @@ export function integrate(o: Organism, dt: number): void {
  * Skipped for a held organism: the pointer that's dragging it is expected
  * to stay clamped to the canvas, so walls have nothing to correct, and a
  * wall bounce would stomp the fling velocity the drag is building up.
+ *
+ * `wallRestitution` is the live BOUNCE_WALL_RANGE value (Issue 13,
+ * WorldParams.bounce).
  */
-export function bounceWalls(o: Organism, width: number, height: number): void {
+export function bounceWalls(
+  o: Organism,
+  width: number,
+  height: number,
+  wallRestitution: number,
+): void {
   if (o.held) return;
   if (o.x - o.radius < 0) {
     o.x = o.radius;
-    o.vx = Math.abs(o.vx) * WALL_RESTITUTION;
+    o.vx = Math.abs(o.vx) * wallRestitution;
   } else if (o.x + o.radius > width) {
     o.x = width - o.radius;
-    o.vx = -Math.abs(o.vx) * WALL_RESTITUTION;
+    o.vx = -Math.abs(o.vx) * wallRestitution;
   }
   if (o.y - o.radius < 0) {
     o.y = o.radius;
-    o.vy = Math.abs(o.vy) * WALL_RESTITUTION;
+    o.vy = Math.abs(o.vy) * wallRestitution;
   } else if (o.y + o.radius > height) {
     o.y = height - o.radius;
-    o.vy = -Math.abs(o.vy) * WALL_RESTITUTION;
+    o.vy = -Math.abs(o.vy) * wallRestitution;
   }
 }
 

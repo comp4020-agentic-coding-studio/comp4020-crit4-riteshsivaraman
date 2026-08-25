@@ -126,3 +126,60 @@ export const PULSE_AMPLITUDE = 0.06;
 export const PULSE_RATE_RANGE: readonly [number, number] = [0.6, 2.2];
 
 export type InkChannel = "pink" | "blue" | "yellow";
+
+// ─── live parameters ─────────────────────────────────────────────────────
+/**
+ * Five 0..1 "culture condition" knobs (Issue 13) — petri-dish language for
+ * things a player can hear or see move within a second: fertility, vigour,
+ * viscosity, bounce, chatter. `world.ts` maps each 0..1 knob onto the
+ * ranges below at the point of use; nothing here is bench-tuned by ear the
+ * way the ★ values are — every range is a guess bracketing the existing
+ * tuned constant, in the same spirit as AMBIENT_IMPULSE and NUCLEUS_DARKEN
+ * above. Revisit at the sound/feel bench once sliders exist to bench with.
+ */
+export const FERTILITY_CHANCE_RANGE: readonly [number, number] = [0.01, 0.45];
+/** Inverse: higher fertility, shorter cooldown between one organism's births. */
+export const FERTILITY_COOLDOWN_RANGE: readonly [number, number] = [4200, 600];
+export const VIGOUR_IMPULSE_RANGE: readonly [number, number] = [2, 34];
+/** Scales a newborn's inherited velocity — a vigorous culture flings its young. */
+export const VIGOUR_BIRTH_RANGE: readonly [number, number] = [0.3, 1.6];
+/** Inverse: higher viscosity, less velocity retained per substep. */
+export const VISCOSITY_DRAG_RANGE: readonly [number, number] = [1.0, 0.982];
+export const BOUNCE_WALL_RANGE: readonly [number, number] = [0.45, 1.0];
+/** Multiplies `restitutionOf` at organism creation. >1 at bounce = 1 is
+ *  deliberate energy injection (see plan.md / Issue 13) — bounded by DRAG
+ *  and MAX_POPULATION. If it runs away, clamp this range's top rather than
+ *  adding an unnamed guard elsewhere. */
+export const BOUNCE_RESTITUTION_SCALE_RANGE: readonly [number, number] = [0.6, 1.25];
+/** Inverse: higher chatter, lower the speed floor for a collision to sound. */
+export const CHATTER_SPEED_RANGE: readonly [number, number] = [110, 12];
+/** Inverse: higher chatter, shorter the per-organism collision-sound cooldown.
+ *  The top end is 40 rather than a rounder 45 so that the single chatter knob
+ *  has ONE exact preimage for both of its targets: at 5/7 this lerp is exactly
+ *  120ms while CHATTER_SPEED_RANGE is exactly 40px/s. Picked to keep the
+ *  no-silent-retune guarantee exact on both halves; the endpoint itself is a
+ *  guess bracketing a bench-tuned default, so revisit at the sound bench. */
+export const CHATTER_COOLDOWN_RANGE: readonly [number, number] = [320, 40];
+
+/**
+ * Knob positions that reproduce the shipped constants exactly — the
+ * no-silent-retune guarantee (see spec/sim.test.ts). Each is the exact
+ * preimage of its `*_RANGE` lerp at the constant's current value, not the
+ * rounded figure `plan.md`/Issue 13 show for readability (e.g. fertility
+ * is `5/44`, which reads as "0.114" in prose but must be kept as the exact
+ * fraction here or BREED_CHANCE stops reproducing to within 1e-9).
+ *
+ * `chatter` drives two constants from one knob, so its two ranges have to
+ * agree on a preimage. The endpoints Issue 13 first specified did not —
+ * (40, 120) solved at 5/7 for speed and 8/11 for cooldown — so
+ * CHATTER_COOLDOWN_RANGE's top end was moved to 40 to make 5/7 exact for
+ * both. If you retune either chatter range, re-derive the other's endpoint
+ * from the same knob position rather than accepting a near miss.
+ */
+export const PARAM_DEFAULTS = {
+  fertility: 5 / 44,
+  vigour: 0.25,
+  viscosity: 1 / 18,
+  bounce: 41 / 55,
+  chatter: 5 / 7,
+};

@@ -154,6 +154,42 @@ input[type="range"] {
   accent-color: var(--ink-pink);
 }
 
+/* Culture conditions (Issue 13): printed matter tucked under a fold, not a
+   settings-panel disclosure — no default triangle, no rounded corners. */
+details.conditions {
+  border: none;
+  border-radius: 0;
+  margin-top: var(--s2);
+  padding-top: var(--s2);
+  border-top: 1px solid var(--paper-shadow);
+}
+
+details.conditions > summary {
+  font-family: var(--face-utility);
+  font-size: var(--size-label);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--ink-text);
+  cursor: pointer;
+  list-style: none;
+}
+
+details.conditions > summary::-webkit-details-marker {
+  display: none;
+}
+
+details.conditions > summary::marker {
+  content: "";
+}
+
+details.conditions[open] > summary {
+  margin-bottom: var(--s2);
+}
+
+details.conditions .row {
+  margin-top: var(--s1);
+}
+
 .clear-btn {
   align-self: flex-start;
   font-family: var(--face-utility);

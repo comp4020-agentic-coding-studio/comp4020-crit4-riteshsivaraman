@@ -40,6 +40,69 @@ import Layout from "../layouts/Layout.astro";
       <input type="range" id="level-input" data-control="level" min="0" max="1" step="0.01" value="1" />
     </div>
     <button type="button" class="clear-btn" data-control="clear">clear</button>
+    <details class="conditions">
+      <summary>conditions</summary>
+      <div class="row">
+        <label class="row-label" for="fertility-input">Fertility</label>
+        <input
+          type="range"
+          id="fertility-input"
+          data-control="fertility"
+          min="0"
+          max="1"
+          step="0.01"
+          value="0.11"
+        />
+      </div>
+      <div class="row">
+        <label class="row-label" for="vigour-input">Vigour</label>
+        <input
+          type="range"
+          id="vigour-input"
+          data-control="vigour"
+          min="0"
+          max="1"
+          step="0.01"
+          value="0.25"
+        />
+      </div>
+      <div class="row">
+        <label class="row-label" for="viscosity-input">Viscosity</label>
+        <input
+          type="range"
+          id="viscosity-input"
+          data-control="viscosity"
+          min="0"
+          max="1"
+          step="0.01"
+          value="0.06"
+        />
+      </div>
+      <div class="row">
+        <label class="row-label" for="bounce-input">Bounce</label>
+        <input
+          type="range"
+          id="bounce-input"
+          data-control="bounce"
+          min="0"
+          max="1"
+          step="0.01"
+          value="0.75"
+        />
+      </div>
+      <div class="row">
+        <label class="row-label" for="chatter-input">Chatter</label>
+        <input
+          type="range"
+          id="chatter-input"
+          data-control="chatter"
+          min="0"
+          max="1"
+          step="0.01"
+          value="0.71"
+        />
+      </div>
+    </details>
   </div>
 
   <dialog id="about-dialog">
