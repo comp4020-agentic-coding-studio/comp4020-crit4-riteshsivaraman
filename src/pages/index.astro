@@ -3,21 +3,55 @@ import Layout from "../layouts/Layout.astro";
 ---
 
 <Layout
-  title="COMP4020 prototype"
-  description="Replace this with one sentence saying what this page is. A search result and a link preview both show it."
+  title="CULTURE — a plate that plays"
+  description="Tap the plate to seed a cell; it sounds, breeds and keeps playing. A generative instrument printed in three overprinted inks."
 >
   <header>
+    <h1>CULTURE</h1>
+    <p class="tagline">a plate that plays</p>
     <nav aria-label="Primary">
-      <a href="./">Home</a>
+      <a href="#about" id="about-link">About</a>
     </nav>
   </header>
-  <main>
-    <h1>COMP4020 prototype</h1>
-    <p data-testid="intro">
-      Replace this with your prototype. This week's brief is on the course
-      website; <code>spec/README.md</code> explains how the checks in this repo
-      relate to it.
+
+  <canvas id="stage"></canvas>
+
+  <p class="invite" data-invite>tap anywhere<br />higher is higher</p>
+
+  <div class="specimen" id="specimen">
+    <div class="row">
+      <span class="row-label" id="mood-label">Mood</span>
+      <div class="segmented" role="group" aria-labelledby="mood-label" data-control="mood">
+        <button type="button" data-mood="bright" aria-pressed="true">bright</button>
+        <button type="button" data-mood="deep" aria-pressed="false">deep</button>
+        <button type="button" data-mood="open" aria-pressed="false">open</button>
+      </div>
+    </div>
+    <div class="row">
+      <label class="row-label" for="drift-input">Drift</label>
+      <input type="range" id="drift-input" data-control="drift" min="0" max="1" step="0.01" value="0.35" />
+    </div>
+    <div class="row">
+      <label class="row-label" for="level-input">Level</label>
+      <input type="range" id="level-input" data-control="level" min="0" max="1" step="0.01" value="1" />
+    </div>
+    <button type="button" class="clear-btn" data-control="clear">clear</button>
+  </div>
+
+  <dialog id="about-dialog">
+    <h2>About</h2>
+    <p>
+      Tap the plate to seed a cell — it sounds once, then keeps bouncing and
+      keeps sounding on its own. Height is pitch; cells that collide hard
+      enough breed, mixing their genomes into a child that looks and sounds
+      like both parents. Colour is never stored — it is printed straight
+      from the genome in three overprinted Risograph inks, so a child
+      differs in ink by exactly as much as it differs in sound.
     </p>
-  </main>
+    <p>Hold to charge a cluster; release to throw it as a chord. The home
+      row (A S D F G H J K) plays too.</p>
+    <button type="button" id="about-close">Close</button>
+  </dialog>
+
   <script src="../scripts/main.ts"></script>
 </Layout>

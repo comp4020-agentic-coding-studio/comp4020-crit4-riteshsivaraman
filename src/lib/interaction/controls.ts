@@ -32,8 +32,54 @@ export type ControlsDeps = {
  *  - `clear` fades; it never hard-stops. Silence arriving instantly reads
  *    as a crash.
  */
-export function attachControls(_deps: ControlsDeps): ControlsRig {
-  throw new Error("not implemented — see plan.md Issue 6");
+export function attachControls(deps: ControlsDeps): ControlsRig {
+  const { root, world, engine, onClear } = deps;
+
+  const moodGroup = root.querySelector<HTMLElement>('[data-control="mood"]');
+  const moodButtons = moodGroup ? [...moodGroup.querySelectorAll<HTMLButtonElement>("button[data-mood]")] : [];
+  const drift = root.querySelector<HTMLInputElement>('[data-control="drift"]');
+  const level = root.querySelector<HTMLInputElement>('[data-control="level"]');
+  const clear = root.querySelector<HTMLButtonElement>('[data-control="clear"]');
+
+  // engine.setMood swaps the scale for future notes only — it never
+  // touches a voice already playing, so a mood change reads as a colour
+  // shift rather than a cut.
+  function onMoodClick(event: MouseEvent): void {
+    const button = (event.target as HTMLElement).closest<HTMLButtonElement>("button[data-mood]");
+    if (!button) return;
+    const mood = button.dataset.mood as Mood;
+    engine.setMood(mood);
+    for (const b of moodButtons) b.setAttribute("aria-pressed", String(b === button));
+  }
+  moodGroup?.addEventListener("click", onMoodClick);
+
+  function onDriftInput(): void {
+    if (!drift) return;
+    world.setDrift(Number(drift.value));
+  }
+  drift?.addEventListener("input", onDriftInput);
+
+  function onLevelInput(): void {
+    if (!level) return;
+    engine.setLevel(Number(level.value));
+  }
+  level?.addEventListener("input", onLevelInput);
+
+  // Never hard-stops: onClear is the caller's job (releaseAll ramps every
+  // voice down, world.clear() empties the plate) — this control just asks.
+  function onClearClick(): void {
+    onClear();
+  }
+  clear?.addEventListener("click", onClearClick);
+
+  return {
+    destroy(): void {
+      moodGroup?.removeEventListener("click", onMoodClick);
+      drift?.removeEventListener("input", onDriftInput);
+      level?.removeEventListener("input", onLevelInput);
+      clear?.removeEventListener("click", onClearClick);
+    },
+  };
 }
 
 export type ControlState = {
